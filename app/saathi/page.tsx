@@ -35,7 +35,7 @@ export default function Saathi() {
   const [state, setState] = useState<State>('idle');
   const [text, setText] = useState('');
   const [lines, setLines] = useState<Line[]>([
-    { from: 'PF Saathi', text: language === 'hi' ? 'नमस्ते! अपने डेमो claim, mismatch या grievance के बारे में पूछें।' : 'Hi! Ask about your demo claim, a mismatch, or a delayed grievance.' },
+    { from: 'PF Saathi', text: 'Hi! Ask about your demo claim, a mismatch, or a delayed grievance.' },
   ]);
   const [supported, setSupported] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
@@ -116,7 +116,7 @@ export default function Saathi() {
         return;
       }
     } catch {
-      // Browser speech below is the resilient fallback.
+      // Browser speech is the resilient fallback.
     }
     browserSpeak(reply);
   };
@@ -163,9 +163,7 @@ export default function Saathi() {
     r.maxAlternatives = 1;
     r.onresult = (event: any) => respond(event.results[0][0].transcript);
     r.onerror = () => setState('idle');
-    r.onend = () => {
-      if (state === 'listening') setState('idle');
-    };
+    r.onend = () => setState((current) => current === 'listening' ? 'idle' : current);
     setState('listening');
     r.start();
   };
@@ -180,28 +178,15 @@ export default function Saathi() {
 
       <section className="assistant card">
         <div className="character-area">
-          <div className="assistant-mode" aria-label="Assistant language">
-            <span>Voice</span><strong>{language === 'hi' ? 'हिंदी' : 'English'}</strong>
-          </div>
+          <div className="assistant-mode" aria-label="Assistant language"><span>Voice</span><strong>{language === 'hi' ? 'हिंदी' : 'English'}</strong></div>
           <SaathiCharacter state={state} />
-          <b aria-live="polite">
-            {state === 'idle' ? (language === 'hi' ? 'तैयार हूँ' : 'Ready to help') : state === 'listening' ? (language === 'hi' ? 'सुन रही हूँ…' : 'Listening…') : (language === 'hi' ? 'बोल रही हूँ…' : 'Speaking…')}
-          </b>
-          {(state === 'listening' || state === 'speaking') && (
-            <div>
-              <Button className="stop" onClick={stop} type="button">Stop</Button>
-            </div>
-          )}
+          <b aria-live="polite">{state === 'idle' ? (language === 'hi' ? 'तैयार हूँ' : 'Ready to help') : state === 'listening' ? (language === 'hi' ? 'सुन रही हूँ…' : 'Listening…') : (language === 'hi' ? 'बोल रही हूँ…' : 'Speaking…')}</b>
+          {(state === 'listening' || state === 'speaking') && <div><Button className="stop" onClick={stop} type="button">Stop</Button></div>}
           <div className="voice-note">Natural voice when available • browser voice fallback • {language === 'hi' ? 'हिंदी आवाज़ समर्थित' : 'Hindi voice supported'}</div>
         </div>
 
         <div className="chat" aria-live="polite">
-          {lines.map((line, index) => (
-            <p className={line.from === 'You' ? 'user' : ''} key={`${line.from}-${index}`}>
-              <b>{line.from}</b>
-              {line.text}
-            </p>
-          ))}
+          {lines.map((line, index) => <p className={line.from === 'You' ? 'user' : ''} key={`${line.from}-${index}`}><b>{line.from}</b>{line.text}</p>)}
         </div>
 
         <form onSubmit={(event) => { event.preventDefault(); respond(text); }}>
@@ -209,11 +194,7 @@ export default function Saathi() {
           <div className="ask">
             <input id="ask" value={text} onChange={(event) => setText(event.target.value)} placeholder={language === 'hi' ? 'मेरा claim अभी कहाँ है?' : 'Why is my claim under process?'} disabled={aiBusy} />
             <Button type="submit" disabled={aiBusy}>{aiBusy ? '…' : 'Send'}</Button>
-            {supported && (
-              <button className="mic" type="button" onPointerDown={listen} aria-label="Speak to PF Saathi" aria-pressed={state === 'listening'}>
-                🎙️
-              </button>
-            )}
+            {supported && <button className="mic" type="button" onPointerDown={listen} aria-label="Speak to PF Saathi" aria-pressed={state === 'listening'}>🎙️</button>}
           </div>
           {!supported && <small>Microphone input isn’t available in this browser. You can still use every feature by typing.</small>}
         </form>
