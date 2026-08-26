@@ -1,4 +1,170 @@
-'use client'; import {useEffect,useRef,useState} from 'react'; import Link from 'next/link'; import {SaathiCharacter} from '@/components/assistant/SaathiCharacter'; import {Button} from '@/components/ui/Button'; import {useLanguage} from '@/components/layout/Shell';
-type State='idle'|'listening'|'speaking';type Line={from:'You'|'PF Saathi';text:string};declare global {interface Window {webkitSpeechRecognition?:new()=>any;SpeechRecognition?:new()=>any}}
-const answer=(q:string)=>/mismatch|name|आधार/i.test(q)?'Let’s check the mock names before a claim starts. Open Mismatch Check and compare your synthetic Aadhaar, UAN, and bank names.':/grievance|pending|escalat|शिकायत/i.test(q)?'Your synthetic grievance has waited 34 days, beyond the illustrative threshold. I can help you prepare a follow-up for the Mock Regional Facilitation Office.': 'Your demo claim is being reviewed by the relevant office. Nothing is needed from you right now; the next update appears after review.';
-export default function Saathi(){const {language}=useLanguage();const [state,setState]=useState<State>('idle'),[text,setText]=useState(''),[lines,setLines]=useState<Line[]>([{from:'PF Saathi',text:'Hello. Ask about your synthetic claim, a mismatch, or a delayed grievance.'}]),[supported,setSupported]=useState(false);const recognition=useRef<any>();useEffect(()=>{setSupported(Boolean(window.SpeechRecognition||window.webkitSpeechRecognition))},[]);const stop=()=>{recognition.current?.stop();speechSynthesis.cancel();setState('idle')};const respond=(q:string)=>{if(!q.trim())return; const r=answer(q);setLines(x=>[...x,{from:'You',text:q},{from:'PF Saathi',text:r}]);setText('');setState('speaking');const say=new SpeechSynthesisUtterance(r);say.lang=language==='hi'?'hi-IN':'en-IN';say.onend=()=>setState('idle');speechSynthesis.cancel();speechSynthesis.speak(say)};const listen=()=>{const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R)return;const r=new R();recognition.current=r;r.lang=language==='hi'?'hi-IN':'en-IN';r.onresult=(e:any)=>respond(e.results[0][0].transcript);r.onend=()=>setState('idle');setState('listening');r.start()};return <div className="page assistant-page"><div><p className="eyebrow">Your guided companion</p><h1>Talk it through with PF Saathi</h1><p className="lead">Speak if you prefer. Type whenever you want. The same guidance is always available both ways.</p></div><section className="assistant card"><div className="character-area"><SaathiCharacter state={state}/><b aria-live="polite">{state==='idle'?'Ready to help':state==='listening'?'Listening…':'Speaking…'}</b>{(state==='listening'||state==='speaking')&&<Button className="stop" onClick={stop}>Stop</Button>}</div><div className="chat" aria-live="polite">{lines.map((l,i)=><p className={l.from==='You'?'user':''} key={i}><b>{l.from}</b>{l.text}</p>)}</div><form onSubmit={e=>{e.preventDefault();respond(text)}}><label htmlFor="ask">Ask PF Saathi</label><div className="ask"><input id="ask" value={text} onChange={e=>setText(e.target.value)} placeholder="Why is my claim under process?"/><Button type="submit">Send</Button>{supported&&<button className="mic" type="button" onPointerDown={listen} aria-label="Speak to PF Saathi">⌁</button>}</div>{!supported&&<small>Microphone input isn’t available in this browser. You can still use every feature by typing.</small>}</form><div className="suggestions"><Button className="secondary" onClick={()=>respond('Explain this claim')}>Explain this</Button><Button className="secondary" onClick={()=>respond('What should I do?')}>What should I do?</Button><Link href="/mismatch"><Button className="secondary">Check mismatch</Button></Link><Link href="/grievance"><Button className="secondary">Draft escalation</Button></Link></div></section></div>}
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { SaathiCharacter } from '@/components/assistant/SaathiCharacter';
+import { Button } from '@/components/ui/Button';
+import { useLanguage } from '@/components/layout/Shell';
+
+type State = 'idle' | 'listening' | 'speaking';
+type Line = { from: 'You' | 'PF Saathi'; text: string };
+
+declare global {
+  interface Window {
+    webkitSpeechRecognition?: new () => any;
+    SpeechRecognition?: new () => any;
+  }
+}
+
+const answer = (q: string) =>
+  /mismatch|name|आधार/i.test(q)
+    ? 'Let’s check the mock names before a claim starts. Open Mismatch Check and compare your synthetic Aadhaar, UAN, and bank names.'
+    : /grievance|pending|escalat|शिकायत/i.test(q)
+      ? 'Your synthetic grievance has waited 34 days, beyond the illustrative threshold. I can help you prepare a follow-up for the Mock Regional Facilitation Office.'
+      : 'Your demo claim is being reviewed by the relevant office. Nothing is needed from you right now; the next update appears after review.';
+
+export default function Saathi() {
+  const { language } = useLanguage();
+  const [state, setState] = useState<State>('idle');
+  const [text, setText] = useState('');
+  const [lines, setLines] = useState<Line[]>([
+    {
+      from: 'PF Saathi',
+      text: 'Hello. Ask about your synthetic claim, a mismatch, or a delayed grievance.',
+    },
+  ]);
+  const [supported, setSupported] = useState(false);
+  const recognition = useRef<any>(null);
+
+  useEffect(() => {
+    setSupported(Boolean(window.SpeechRecognition || window.webkitSpeechRecognition));
+  }, []);
+
+  const stop = () => {
+    recognition.current?.stop();
+    window.speechSynthesis?.cancel();
+    setState('idle');
+  };
+
+  const respond = (q: string) => {
+    if (!q.trim()) return;
+
+    const r = answer(q);
+    setLines((x) => [
+      ...x,
+      { from: 'You', text: q },
+      { from: 'PF Saathi', text: r },
+    ]);
+    setText('');
+
+    if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+      setState('idle');
+      return;
+    }
+
+    setState('speaking');
+    const say = new SpeechSynthesisUtterance(r);
+    say.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+    say.onend = () => setState('idle');
+    say.onerror = () => setState('idle');
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(say);
+  };
+
+  const listen = () => {
+    const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!R) return;
+
+    const r = new R();
+    recognition.current = r;
+    r.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+    r.onresult = (e: any) => respond(e.results[0][0].transcript);
+    r.onerror = () => setState('idle');
+    r.onend = () => setState('idle');
+    setState('listening');
+    r.start();
+  };
+
+  return (
+    <div className="page assistant-page">
+      <div>
+        <p className="eyebrow">Your guided companion</p>
+        <h1>Talk it through with PF Saathi</h1>
+        <p className="lead">
+          Speak if you prefer. Type whenever you want. The same guidance is always available both ways.
+        </p>
+      </div>
+
+      <section className="assistant card">
+        <div className="character-area">
+          <SaathiCharacter state={state} />
+          <b aria-live="polite">
+            {state === 'idle' ? 'Ready to help' : state === 'listening' ? 'Listening…' : 'Speaking…'}
+          </b>
+          {(state === 'listening' || state === 'speaking') && (
+            <Button className="stop" onClick={stop} type="button">
+              Stop
+            </Button>
+          )}
+        </div>
+
+        <div className="chat" aria-live="polite">
+          {lines.map((l, i) => (
+            <p className={l.from === 'You' ? 'user' : ''} key={i}>
+              <b>{l.from}</b>
+              {l.text}
+            </p>
+          ))}
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            respond(text);
+          }}
+        >
+          <label htmlFor="ask">Ask PF Saathi</label>
+          <div className="ask">
+            <input
+              id="ask"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Why is my claim under process?"
+            />
+            <Button type="submit">Send</Button>
+            {supported && (
+              <button
+                className="mic"
+                type="button"
+                onPointerDown={listen}
+                aria-label="Speak to PF Saathi"
+              >
+                ⌁
+              </button>
+            )}
+          </div>
+          {!supported && (
+            <small>
+              Microphone input isn’t available in this browser. You can still use every feature by typing.
+            </small>
+          )}
+        </form>
+
+        <div className="suggestions">
+          <Button className="secondary" onClick={() => respond('Explain this claim')} type="button">
+            Explain this
+          </Button>
+          <Button className="secondary" onClick={() => respond('What should I do?')} type="button">
+            What should I do?
+          </Button>
+          <Link href="/mismatch">
+            <Button className="secondary" type="button">Check mismatch</Button>
+          </Link>
+          <Link href="/grievance">
+            <Button className="secondary" type="button">Draft escalation</Button>
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}
