@@ -1,0 +1,1 @@
+export function SaathiCharacter({state='idle'}:{state?:'idle'|'listening'|'speaking'}){return <div className={`saathi-character ${state}`} aria-label={`PF Saathi is ${state}`} role="img"><div className="rings"/><div className="head"><i/><i/><b/></div><div className="body"/><span>PF</span></div>}

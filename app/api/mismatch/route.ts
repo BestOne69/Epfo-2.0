@@ -1,0 +1,1 @@
+import {NextResponse} from 'next/server'; export async function POST(){return NextResponse.json({reply:'PF Saathi uses deterministic synthetic-demo guidance when no server-side AI helper is configured.',fallback:true})}
