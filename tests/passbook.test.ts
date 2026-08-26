@@ -1,0 +1,1 @@
+import{it,expect}from'vitest';import{withdrawablePF}from'../lib/deterministic/passbook';it('does not add EPS to withdrawable PF',()=>expect(withdrawablePF({employeeShare:42000,employerShare:38000,interest:6500,eps:31200})).toBe(86500))

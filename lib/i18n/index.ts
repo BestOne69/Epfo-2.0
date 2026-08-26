@@ -1,0 +1,5 @@
+export type Language = 'en' | 'hi';
+export const copy = {
+ en: { home:'Home', status:'PF Status', saathi:'PF Saathi', help:'Help', prototype:'Independent hackathon prototype — not affiliated with EPFO or the Government of India.', synthetic:'Synthetic data only', check:'Check my PF status', talk:'Talk to PF Saathi', hero:'Your PF, made easier to understand.', sub:'Understand your status, catch mistakes early, and get help when you’re stuck.', continue:'Continue', back:'Back', demo:'Demo data only — do not enter real Aadhaar/UAN/bank information.' },
+ hi: { home:'होम', status:'पीएफ़ स्थिति', saathi:'पीएफ़ साथी', help:'मदद', prototype:'स्वतंत्र हैकथॉन प्रोटोटाइप — EPFO या भारत सरकार से संबद्ध नहीं।', synthetic:'केवल सिंथेटिक डेटा', check:'मेरी पीएफ़ स्थिति देखें', talk:'पीएफ़ साथी से बात करें', hero:'अपना पीएफ़, आसानी से समझें।', sub:'अपनी स्थिति समझें, गलतियाँ पहले पकड़ें और अटकने पर मदद पाएँ।', continue:'आगे बढ़ें', back:'वापस', demo:'केवल डेमो डेटा — वास्तविक आधार/UAN/बैंक जानकारी न डालें।' }
+} as const;
